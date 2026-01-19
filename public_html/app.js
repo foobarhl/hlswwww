@@ -375,6 +375,10 @@ class HLSWWeb {
                     <td>${player.score}</td>
                     <td>${this.formatDuration(player.duration)}</td>
                 `;
+                tr.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    this.showPlayerContextMenu(e.pageX, e.pageY, player);
+                });
                 playerTbody.appendChild(tr);
             });
         } else {
@@ -541,6 +545,127 @@ class HLSWWeb {
         const menu = document.getElementById('context-menu');
         if (menu) {
             menu.remove();
+        }
+    }
+
+    showPlayerContextMenu(x, y, player) {
+        this.hideContextMenu();
+
+        const menu = document.createElement('div');
+        menu.className = 'context-menu show';
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+        menu.id = 'context-menu';
+
+        menu.innerHTML = `
+            <div class="context-menu-item" data-action="kick">Kick Player</div>
+            <div class="context-menu-item" data-action="ban">Ban Player</div>
+        `;
+
+        document.body.appendChild(menu);
+
+        menu.querySelectorAll('.context-menu-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const action = item.dataset.action;
+
+                switch (action) {
+                    case 'kick':
+                        this.kickPlayer(player);
+                        break;
+                    case 'ban':
+                        this.banPlayer(player);
+                        break;
+                }
+
+                this.hideContextMenu();
+            });
+        });
+
+        // Adjust position if menu goes off screen
+        const rect = menu.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+            menu.style.left = `${x - rect.width}px`;
+        }
+        if (rect.bottom > window.innerHeight) {
+            menu.style.top = `${y - rect.height}px`;
+        }
+    }
+
+    async kickPlayer(player) {
+        if (!this.selectedServer) {
+            this.appendRconOutput('Error: No server selected', 'error');
+            return;
+        }
+
+        const password = document.getElementById('rcon-password').value;
+        if (!password) {
+            this.appendRconOutput('Error: RCON password required to kick players', 'error');
+            return;
+        }
+
+        const command = `kick "${player.name}"`;
+        await this.executeRcon(command);
+        this.setStatus(`Kicked ${player.name}`);
+
+        // Refresh server to update player list
+        setTimeout(() => this.queryServer(this.selectedServer), 1000);
+    }
+
+    async banPlayer(player) {
+        if (!this.selectedServer) {
+            this.appendRconOutput('Error: No server selected', 'error');
+            return;
+        }
+
+        const password = document.getElementById('rcon-password').value;
+        if (!password) {
+            this.appendRconOutput('Error: RCON password required to ban players', 'error');
+            return;
+        }
+
+        const command = `banid 0 "${player.name}" kick`;
+        await this.executeRcon(command);
+        await this.executeRcon('writeid');
+        this.setStatus(`Banned ${player.name}`);
+
+        // Refresh server to update player list
+        setTimeout(() => this.queryServer(this.selectedServer), 1000);
+    }
+
+    async executeRcon(command) {
+        const password = document.getElementById('rcon-password').value;
+
+        this.appendRconOutput(`> ${command}`, 'info');
+
+        try {
+            const response = await fetch('rcon.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    ip: this.selectedServer.ip,
+                    port: this.selectedServer.port,
+                    password: password,
+                    command: command
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                if (data.response) {
+                    this.appendRconOutput(data.response, 'success');
+                }
+                return true;
+            } else {
+                this.appendRconOutput(`Error: ${data.error}`, 'error');
+                return false;
+            }
+        } catch (error) {
+            this.appendRconOutput(`Error: ${error.message}`, 'error');
+            return false;
         }
     }
 
