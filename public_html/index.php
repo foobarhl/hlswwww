@@ -124,6 +124,7 @@
         <!-- Status Bar -->
         <div class="status-bar">
             <span id="status-text">Ready</span>
+            <span class="status-center"><a href="https://github.com/foobarhl/hlswwww" target="_blank">by [foo] bar</a></span>
             <span id="status-server"></span>
         </div>
     </div>

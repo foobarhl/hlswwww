@@ -315,6 +315,22 @@ tbody tr.offline td {
     border-top: 1px solid #3d3d5c;
     display: flex;
     justify-content: space-between;
+    position: relative;
+}
+
+.status-bar .status-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.status-bar .status-center a {
+    color: #666;
+    text-decoration: none;
+}
+
+.status-bar .status-center a:hover {
+    color: #888;
 }
 
 /* Modal */

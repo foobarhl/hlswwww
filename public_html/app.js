@@ -405,6 +405,10 @@ class HLSWWeb {
                     <td title="${this.escapeHtml(key)}">${this.escapeHtml(key)}</td>
                     <td title="${this.escapeHtml(value)}">${this.escapeHtml(value)}</td>
                 `;
+                tr.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    this.showCvarContextMenu(e.pageX, e.pageY, key, value);
+                });
                 cvarTbody.appendChild(tr);
             }
         } else {
@@ -585,6 +589,40 @@ class HLSWWeb {
                         break;
                 }
 
+                this.hideContextMenu();
+            });
+        });
+
+        // Adjust position if menu goes off screen
+        const rect = menu.getBoundingClientRect();
+        if (rect.right > window.innerWidth) {
+            menu.style.left = `${x - rect.width}px`;
+        }
+        if (rect.bottom > window.innerHeight) {
+            menu.style.top = `${y - rect.height}px`;
+        }
+    }
+
+    showCvarContextMenu(x, y, key, value) {
+        this.hideContextMenu();
+
+        const menu = document.createElement('div');
+        menu.className = 'context-menu show';
+        menu.style.left = `${x}px`;
+        menu.style.top = `${y}px`;
+        menu.id = 'context-menu';
+
+        menu.innerHTML = `
+            <div class="context-menu-item" data-action="copy">Copy "${key}=${value}"</div>
+        `;
+
+        document.body.appendChild(menu);
+
+        menu.querySelectorAll('.context-menu-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(`${key}=${value}`);
+                this.setStatus(`Copied: ${key}=${value}`);
                 this.hideContextMenu();
             });
         });
