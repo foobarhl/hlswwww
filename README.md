@@ -42,6 +42,9 @@ return [
     // UDP port range for log receiver
     'log_receiver_port_min' => 28000,
     'log_receiver_port_max' => 29000,
+
+    // Log session timeout in seconds (0 = no timeout)
+    'log_receiver_timeout' => 900, // 15 minutes
 ];
 ```
 
