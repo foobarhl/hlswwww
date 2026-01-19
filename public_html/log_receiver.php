@@ -24,6 +24,7 @@ $config = file_exists($configPath) ? require $configPath : [];
 $configuredIp = $config['log_receiver_ip'] ?? 'auto';
 $portMin = $config['log_receiver_port_min'] ?? 28000;
 $portMax = $config['log_receiver_port_max'] ?? 29000;
+$timeout = $config['log_receiver_timeout'] ?? 900; // 15 minutes default
 $maxRetries = 50;
 
 // Resolve IP address
@@ -101,15 +102,15 @@ echo "data: Listening for logs on {$logAddress}\n\n";
 flush();
 
 // Main loop - check for UDP packets and stream via SSE
-$timeout = 300; // 5 minute timeout
 $startTime = time();
 $lastKeepalive = time();
 
 while (true) {
-    // Check for timeout
-    if (time() - $startTime > $timeout) {
+    // Check for timeout (if enabled)
+    if ($timeout > 0 && (time() - $startTime) > $timeout) {
+        $minutes = round($timeout / 60);
         echo "event: timeout\n";
-        echo "data: Connection timed out after 5 minutes\n\n";
+        echo "data: Connection timed out after {$minutes} minutes\n\n";
         flush();
         break;
     }
