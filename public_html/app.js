@@ -613,7 +613,7 @@ class HLSWWeb {
         menu.id = 'context-menu';
 
         menu.innerHTML = `
-            <div class="context-menu-item" data-action="copy">Copy "${key}=${value}"</div>
+            <div class="context-menu-item" data-action="copy">Copy "${key} ${value}"</div>
         `;
 
         document.body.appendChild(menu);
@@ -621,8 +621,8 @@ class HLSWWeb {
         menu.querySelectorAll('.context-menu-item').forEach(item => {
             item.addEventListener('click', (e) => {
                 e.stopPropagation();
-                navigator.clipboard.writeText(`${key}=${value}`);
-                this.setStatus(`Copied: ${key}=${value}`);
+                navigator.clipboard.writeText(`${key} ${value}`);
+                this.setStatus(`Copied: ${key} ${value}`);
                 this.hideContextMenu();
             });
         });
