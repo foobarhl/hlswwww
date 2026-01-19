@@ -17,6 +17,7 @@ $port = filter_var($_GET['port'], FILTER_VALIDATE_INT, [
     'options' => ['min_range' => 1, 'max_range' => 65535]
 ]);
 $type = isset($_GET['type']) ? $_GET['type'] : 'info';
+$debug = isset($_GET['debug']) && $_GET['debug'] === '1';
 
 if (!$ip || !$port) {
     die(json_encode(['error' => 'Invalid IP or port']));
@@ -63,6 +64,75 @@ class SourceQuery {
         if ($info['timed_out']) {
             throw new Exception("Connection timed out");
         }
+        return $response;
+    }
+
+    private function readMultiPacket() {
+        $packets = [];
+        $totalPackets = 0;
+
+        // Read first packet
+        $response = fread($this->socket, 4096);
+        $info = stream_get_meta_data($this->socket);
+        if ($info['timed_out']) {
+            throw new Exception("Connection timed out");
+        }
+
+        if (strlen($response) < 5) {
+            return $response;
+        }
+
+        // Check if this is a split packet (header 0xFFFFFFFE)
+        // Use 'V' for little-endian (Source engine byte order)
+        $header = unpack('V', substr($response, 0, 4))[1];
+
+        if ($header === 0xFFFFFFFE) {
+            // Split packet - Source engine format
+            // Bytes 0-3: 0xFFFFFFFE
+            // Bytes 4-7: Request ID (int32)
+            // Byte 8: Total packets
+            // Byte 9: Current packet number
+            // Bytes 10+: Payload (may include size header for compressed packets)
+            if (strlen($response) < 12) {
+                return $response;
+            }
+
+            $requestId = unpack('V', substr($response, 4, 4))[1];
+            $isCompressed = ($requestId & 0x80000000) !== 0;
+            $totalPackets = ord($response[8]);
+            $packetNumber = ord($response[9]);
+
+            // For Source engine, there's a 2-byte size field before payload
+            $payloadStart = 12; // Skip: 4 (header) + 4 (reqid) + 1 (total) + 1 (number) + 2 (size)
+            $packets[$packetNumber] = substr($response, $payloadStart);
+
+            // Read remaining packets
+            while (count($packets) < $totalPackets) {
+                $response = fread($this->socket, 4096);
+                $info = stream_get_meta_data($this->socket);
+                if ($info['timed_out']) {
+                    break;
+                }
+
+                if (strlen($response) < 12) {
+                    break;
+                }
+
+                // Verify it's still a split packet
+                $checkHeader = unpack('V', substr($response, 0, 4))[1];
+                if ($checkHeader !== 0xFFFFFFFE) {
+                    break;
+                }
+
+                $packetNumber = ord($response[9]);
+                $packets[$packetNumber] = substr($response, $payloadStart);
+            }
+
+            // Reassemble packets in order
+            ksort($packets);
+            $response = implode('', $packets);
+        }
+
         return $response;
     }
 
@@ -291,33 +361,60 @@ class SourceQuery {
         return $players;
     }
 
-    public function getRules() {
+    public function getRules($debug = false) {
+        $debugInfo = [];
+
         // First get challenge
         $this->sendPacket(A2S_RULES . "\xFF\xFF\xFF\xFF");
-        $response = $this->readPacket();
+
+        try {
+            $response = $this->readMultiPacket();
+        } catch (Exception $e) {
+            if ($debug) return ['_debug' => 'Timeout on initial read: ' . $e->getMessage()];
+            return [];
+        }
+
+        $debugInfo['initial_response_len'] = strlen($response);
 
         if (strlen($response) < 5) {
-            return []; // Server doesn't support rules query
+            if ($debug) return ['_debug' => 'Response too short: ' . strlen($response) . ' bytes'];
+            return [];
         }
 
         $header = ord($response[4]);
+        $debugInfo['initial_header'] = '0x' . dechex($header);
 
         if ($header === 0x41) {
             // Got challenge, send actual request
             if (strlen($response) < 9) {
+                if ($debug) return ['_debug' => 'Challenge response too short', '_info' => $debugInfo];
                 return [];
             }
             $challenge = substr($response, 5, 4);
+            $debugInfo['challenge'] = bin2hex($challenge);
+
             $this->sendPacket(A2S_RULES . $challenge);
-            $response = $this->readPacket();
+
+            try {
+                $response = $this->readMultiPacket();
+            } catch (Exception $e) {
+                if ($debug) return ['_debug' => 'Timeout after challenge: ' . $e->getMessage(), '_info' => $debugInfo];
+                return [];
+            }
+
+            $debugInfo['rules_response_len'] = strlen($response);
+
             if (strlen($response) < 5) {
+                if ($debug) return ['_debug' => 'Rules response too short: ' . strlen($response), '_info' => $debugInfo];
                 return [];
             }
             $header = ord($response[4]);
+            $debugInfo['rules_header'] = '0x' . dechex($header);
         }
 
         if ($header !== 0x45) {
-            return []; // Server doesn't support rules query or returned unexpected response
+            if ($debug) return ['_debug' => 'Unexpected header: 0x' . dechex($header) . ' (expected 0x45)', '_info' => $debugInfo];
+            return [];
         }
 
         $pos = 5;
@@ -393,7 +490,7 @@ try {
             $result['data'] = $query->getPlayers();
             break;
         case 'rules':
-            $result['data'] = $query->getRules();
+            $result['data'] = $query->getRules($debug);
             break;
         case 'all':
             $data = [];
@@ -410,7 +507,7 @@ try {
 
             // Rules - optional, many servers don't support it
             try {
-                $data['rules'] = $query->getRules();
+                $data['rules'] = $query->getRules($debug);
             } catch (Exception $e) {
                 $data['rules'] = [];
             }
