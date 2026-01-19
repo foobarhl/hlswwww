@@ -2,6 +2,8 @@
 
 A web-based game server browser inspired by the classic HLSW (Half-Life Server Watch) desktop application. Monitor and manage Source and GoldSrc game servers from your browser.
 
+![HLSW Web Screenshot](screenshots/screenshot1.png)
+
 ## Features
 
 - Query Source Engine servers (CS:GO, CS2, TF2, Garry's Mod, etc.)
@@ -32,11 +34,11 @@ A web-based game server browser inspired by the classic HLSW (Half-Life Server W
 
 ## Files
 
-- `index.php` - Main HTML interface
-- `app.js` - Frontend JavaScript application
-- `style.css` - Styling
-- `query.php` - A2S query proxy (server info, players, rules)
-- `rcon.php` - RCON command proxy (Source and GoldSrc protocols)
+- `public_html/index.php` - Main HTML interface
+- `public_html/app.js` - Frontend JavaScript application
+- `public_html/style.css` - Styling
+- `public_html/query.php` - A2S query proxy (server info, players, rules)
+- `public_html/rcon.php` - RCON command proxy (Source and GoldSrc protocols)
 
 ## License
 
