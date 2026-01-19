@@ -8,6 +8,8 @@ class HLSWWeb {
         this.servers = [];
         this.selectedServer = null;
         this.refreshInterval = null;
+        this.loggingEnabled = false;
+        this.logEventSource = null;
 
         this.init();
     }
@@ -79,6 +81,11 @@ class HLSWWeb {
 
         document.getElementById('btn-save-rcon').addEventListener('click', () => {
             this.saveRconPassword();
+        });
+
+        // Logging toggle
+        document.getElementById('btn-toggle-logging').addEventListener('click', () => {
+            this.toggleLogging();
         });
 
         // Close modal on outside click
@@ -667,6 +674,97 @@ class HLSWWeb {
             this.appendRconOutput(`Error: ${error.message}`, 'error');
             return false;
         }
+    }
+
+    // Real-time Logging
+    toggleLogging() {
+        if (this.loggingEnabled) {
+            this.stopLogging();
+        } else {
+            this.startLogging();
+        }
+    }
+
+    async startLogging() {
+        if (!this.selectedServer) {
+            this.appendRconOutput('Error: No server selected', 'error');
+            return;
+        }
+
+        const password = document.getElementById('rcon-password').value;
+        if (!password) {
+            this.appendRconOutput('Error: RCON password required for logging', 'error');
+            return;
+        }
+
+        this.appendRconOutput('Starting log receiver...', 'info');
+
+        // Connect to SSE log receiver - it will allocate a UDP port and return the address
+        this.logEventSource = new EventSource('log_receiver.php');
+        this.logAddress = null;
+
+        this.logEventSource.addEventListener('address', async (e) => {
+            this.logAddress = e.data;
+
+            this.appendRconOutput(`Log receiver listening on ${this.logAddress}`, 'success');
+
+            // Enable logging on the game server
+            await this.executeRcon('log on');
+            await this.executeRcon(`logaddress_add ${this.logAddress}`);
+
+            this.appendRconOutput('Waiting for logs...', 'info');
+        });
+
+        this.logEventSource.addEventListener('status', (e) => {
+            this.appendRconOutput(e.data, 'info');
+        });
+
+        this.logEventSource.addEventListener('log', (e) => {
+            const logLine = JSON.parse(e.data);
+            this.appendRconOutput(logLine, 'log');
+        });
+
+        this.logEventSource.addEventListener('error', (e) => {
+            if (e.data) {
+                this.appendRconOutput(`Error: ${e.data}`, 'error');
+            }
+            if (this.logEventSource.readyState === EventSource.CLOSED) {
+                this.appendRconOutput('Log stream disconnected', 'error');
+                this.stopLogging();
+            }
+        });
+
+        this.logEventSource.addEventListener('timeout', (e) => {
+            this.appendRconOutput(e.data, 'error');
+            this.stopLogging();
+        });
+
+        this.loggingEnabled = true;
+        document.getElementById('btn-toggle-logging').textContent = 'Stop Logging';
+        document.getElementById('btn-toggle-logging').classList.add('active');
+        this.setStatus('Real-time logging enabled');
+    }
+
+    async stopLogging() {
+        // Remove log address from game server first (while we still have the address)
+        if (this.selectedServer && this.logAddress) {
+            const password = document.getElementById('rcon-password').value;
+            if (password) {
+                await this.executeRcon(`logaddress_del ${this.logAddress}`);
+            }
+        }
+
+        // Close the SSE connection (this also closes the UDP socket on the server)
+        if (this.logEventSource) {
+            this.logEventSource.close();
+            this.logEventSource = null;
+        }
+
+        this.logAddress = null;
+        this.loggingEnabled = false;
+        document.getElementById('btn-toggle-logging').textContent = 'Start Logging';
+        document.getElementById('btn-toggle-logging').classList.remove('active');
+        this.setStatus('Real-time logging stopped');
     }
 
     // Utilities

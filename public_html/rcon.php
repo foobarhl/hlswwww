@@ -37,10 +37,13 @@ $port = filter_var($input['port'], FILTER_VALIDATE_INT, [
 ]);
 $password = $input['password'];
 $command = $input['command'];
+$debug = isset($input['debug']) && $input['debug'];
 
 if (!$ip || !$port) {
     die(json_encode(['error' => 'Invalid IP or port']));
 }
+
+$debugLog = [];
 
 // RCON packet types
 define('SERVERDATA_AUTH', 3);
@@ -254,35 +257,72 @@ class GoldSrcRcon {
 // Main execution
 try {
     // Try Source RCON first (TCP)
+    if ($debug) $debugLog[] = "Attempting Source RCON (TCP) to $ip:$port";
+
     $rcon = new SourceRcon($ip, $port);
+
+    if ($debug) $debugLog[] = "Connecting...";
     $rcon->connect();
+    if ($debug) $debugLog[] = "Connected successfully";
+
+    if ($debug) $debugLog[] = "Authenticating...";
     $rcon->authenticate($password);
+    if ($debug) $debugLog[] = "Authenticated successfully";
+
+    if ($debug) $debugLog[] = "Executing command: $command";
     $result = $rcon->execute($command);
+    if ($debug) $debugLog[] = "Command executed, response length: " . strlen($result);
+
     $rcon->disconnect();
 
-    echo json_encode([
+    $response = [
         'success' => true,
         'response' => $result
-    ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    ];
+    if ($debug) $response['debug'] = $debugLog;
+
+    echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {
+    if ($debug) $debugLog[] = "Source RCON failed: " . $e->getMessage();
+
     // If Source RCON fails, try GoldSrc RCON
     try {
+        if ($debug) $debugLog[] = "Attempting GoldSrc RCON (UDP) to $ip:$port";
+
         $rcon = new GoldSrcRcon($ip, $port);
+
+        if ($debug) $debugLog[] = "Connecting...";
         $rcon->connect();
+        if ($debug) $debugLog[] = "Connected successfully";
+
+        if ($debug) $debugLog[] = "Getting challenge...";
         $rcon->authenticate($password);
+        if ($debug) $debugLog[] = "Got challenge";
+
+        if ($debug) $debugLog[] = "Executing command: $command";
         $result = $rcon->execute($command, $password);
+        if ($debug) $debugLog[] = "Command executed, response length: " . strlen($result);
+
         $rcon->disconnect();
 
-        echo json_encode([
+        $response = [
             'success' => true,
             'response' => $result
-        ], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        ];
+        if ($debug) $response['debug'] = $debugLog;
+
+        echo json_encode($response, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
     } catch (Exception $e2) {
-        echo json_encode([
+        if ($debug) $debugLog[] = "GoldSrc RCON failed: " . $e2->getMessage();
+
+        $response = [
             'success' => false,
             'error' => $e->getMessage()
-        ]);
+        ];
+        if ($debug) $response['debug'] = $debugLog;
+
+        echo json_encode($response);
     }
 }

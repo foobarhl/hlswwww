@@ -206,6 +206,31 @@ tbody tr.offline td {
     overflow: hidden;
 }
 
+.rcon-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rcon-controls > button {
+    padding: 3px 10px;
+    background: linear-gradient(to bottom, #3d3d5c, #2d2d44);
+    border: 1px solid #4d4d6d;
+    color: #e0e0e0;
+    cursor: pointer;
+    font-size: 10px;
+}
+
+.rcon-controls > button:hover {
+    background: linear-gradient(to bottom, #4d4d6d, #3d3d5c);
+}
+
+.rcon-controls > button.active {
+    background: linear-gradient(to bottom, #4a6b4a, #2d442d);
+    border-color: #5a8a5a;
+    color: #90ee90;
+}
+
 .rcon-password-input {
     display: flex;
     align-items: center;
@@ -472,6 +497,11 @@ tbody tr.offline td {
 
 .rcon-info {
     color: #6b9fff;
+}
+
+.rcon-log {
+    color: #b0b0b0;
+    font-style: italic;
 }
 
 /* Server status indicators */

@@ -103,10 +103,13 @@
         <div class="panel rcon-panel">
             <div class="panel-header">
                 <span>RCON Console</span>
-                <div class="rcon-password-input">
-                    <label>Password:</label>
-                    <input type="password" id="rcon-password" placeholder="RCON Password">
-                    <button id="btn-save-rcon">Save</button>
+                <div class="rcon-controls">
+                    <button id="btn-toggle-logging" title="Start receiving real-time server logs">Start Logging</button>
+                    <div class="rcon-password-input">
+                        <label>Password:</label>
+                        <input type="password" id="rcon-password" placeholder="RCON Password">
+                        <button id="btn-save-rcon">Save</button>
+                    </div>
                 </div>
             </div>
             <div class="panel-content">
