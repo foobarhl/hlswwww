@@ -1,9 +1,3 @@
-<?php
-session_start();
-if (!isset($_SESSION['api_key'])) {
-    $_SESSION['api_key'] = bin2hex(random_bytes(16));
-}
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -181,7 +175,6 @@ if (!isset($_SESSION['api_key'])) {
         </div>
     </div>
 
-    <script>window.HLSW_API_KEY = '<?php echo $_SESSION['api_key']; ?>';</script>
     <script src="app.js"></script>
 </body>
 </html>

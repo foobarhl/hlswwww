@@ -14,7 +14,10 @@ class HLSWWeb {
         this.init();
     }
 
-    init() {
+    async init() {
+        // Fetch session key first
+        await this.refreshSessionKey();
+
         this.loadServers();
         this.bindEvents();
         this.initSplitters();
