@@ -392,23 +392,34 @@ class HLSWWeb {
         return /^[\w.-]+$/.test(ip);
     }
 
-    // Handle session expiry
-    handleSessionExpiry(response) {
-        if (response.status === 403) {
-            window.location.reload();
-            return true;
-        }
+    // Handle session expiry - refresh key and signal retry needed
+    async refreshSessionKey() {
+        try {
+            const response = await fetch(`session.php?_t=${Date.now()}`);
+            const data = await response.json();
+            if (data.key) {
+                window.HLSW_API_KEY = data.key;
+                return true;
+            }
+        } catch (e) {}
         return false;
     }
 
     // Server Queries
-    async queryServer(server) {
+    async queryServer(server, retried = false) {
         this.setStatus(`Querying ${server.ip}:${server.port}...`);
 
         try {
             // Query all info at once
             const response = await fetch(`query.php?ip=${server.ip}&port=${server.port}&type=all&_t=${Date.now()}&key=${window.HLSW_API_KEY}`);
-            if (this.handleSessionExpiry(response)) return;
+
+            // Handle session expiry - refresh key and retry once
+            if (response.status === 403 && !retried) {
+                if (await this.refreshSessionKey()) {
+                    return this.queryServer(server, true);
+                }
+            }
+
             const data = await response.json();
 
             if (data.success && data.data) {
@@ -662,22 +673,7 @@ class HLSWWeb {
         this.appendRconOutput(`> ${command}`, 'info');
 
         try {
-            const response = await fetch(`rcon.php?_t=${Date.now()}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    key: window.HLSW_API_KEY,
-                    ip: this.selectedServer.ip,
-                    port: this.selectedServer.port,
-                    password: password,
-                    command: command
-                })
-            });
-
-            if (this.handleSessionExpiry(response)) return;
-            const data = await response.json();
+            const data = await this.sendRcon(this.selectedServer, password, command);
 
             if (data.success) {
                 this.appendRconOutput(data.response || '(no response)', 'success');
@@ -687,6 +683,31 @@ class HLSWWeb {
         } catch (error) {
             this.appendRconOutput(`Error: ${error.message}`, 'error');
         }
+    }
+
+    async sendRcon(server, password, command, retried = false) {
+        const response = await fetch(`rcon.php?_t=${Date.now()}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                key: window.HLSW_API_KEY,
+                ip: server.ip,
+                port: server.port,
+                password: password,
+                command: command
+            })
+        });
+
+        // Handle session expiry - refresh key and retry once
+        if (response.status === 403 && !retried) {
+            if (await this.refreshSessionKey()) {
+                return this.sendRcon(server, password, command, true);
+            }
+        }
+
+        return response.json();
     }
 
     appendRconOutput(text, type = '') {
@@ -891,22 +912,7 @@ class HLSWWeb {
         this.appendRconOutput(`> ${command}`, 'info');
 
         try {
-            const response = await fetch(`rcon.php?_t=${Date.now()}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    key: window.HLSW_API_KEY,
-                    ip: this.selectedServer.ip,
-                    port: this.selectedServer.port,
-                    password: password,
-                    command: command
-                })
-            });
-
-            if (this.handleSessionExpiry(response)) return false;
-            const data = await response.json();
+            const data = await this.sendRcon(this.selectedServer, password, command);
 
             if (data.success) {
                 if (data.response) {
