@@ -474,17 +474,18 @@ class SourceQuery {
 }
 
 // Main execution
-$startTime = microtime(true);
-
 try {
     $query = new SourceQuery($ip, $port);
     $query->connect();
 
     $result = ['success' => true];
+    $ping = null;
 
     switch ($type) {
         case 'info':
+            $startTime = microtime(true);
             $result['data'] = $query->getInfo();
+            $ping = round((microtime(true) - $startTime) * 1000);
             break;
         case 'players':
             $result['data'] = $query->getPlayers();
@@ -495,8 +496,10 @@ try {
         case 'all':
             $data = [];
 
-            // Info is required
+            // Info is required - measure ping on this query only
+            $startTime = microtime(true);
             $data['info'] = $query->getInfo();
+            $ping = round((microtime(true) - $startTime) * 1000);
 
             // Players - optional, some servers don't support it
             try {
@@ -520,8 +523,10 @@ try {
 
     $query->disconnect();
 
-    // Add ping time
-    $result['ping'] = round((microtime(true) - $startTime) * 1000);
+    // Add ping time (only for info and all queries)
+    if ($ping !== null) {
+        $result['ping'] = $ping;
+    }
 
     echo json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
 
