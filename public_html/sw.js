@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hlsw-web-v12';
+const CACHE_NAME = 'hlsw-web-v13';
 const STATIC_ASSETS = [
   '/',
   '/index.php',
@@ -42,6 +42,11 @@ self.addEventListener('activate', (event) => {
 // Fetch - network first for API calls, cache first for static assets
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
+
+  // Only handle http/https requests
+  if (!url.protocol.startsWith('http')) {
+    return;
+  }
 
   // Skip non-GET requests
   if (event.request.method !== 'GET') {
