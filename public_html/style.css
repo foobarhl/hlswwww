@@ -63,6 +63,7 @@ body {
 .main-content {
     display: flex;
     flex: 1;
+    min-height: 0;
     overflow: hidden;
 }
 
@@ -226,6 +227,7 @@ tbody tr.offline td {
 .rcon-panel {
     height: 180px;
     min-height: 80px;
+    flex-shrink: 0;
     overflow: hidden;
 }
 
@@ -283,8 +285,14 @@ tbody tr.offline td {
     font-size: 10px;
 }
 
+.rcon-panel .panel-content {
+    display: flex;
+    flex-direction: column;
+}
+
 .rcon-output {
-    height: calc(100% - 30px);
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 8px;
     font-family: "Consolas", "Courier New", monospace;
@@ -295,6 +303,7 @@ tbody tr.offline td {
 
 .rcon-input-area {
     display: flex;
+    flex-shrink: 0;
     padding: 4px;
     background-color: #1a1a2e;
     border-top: 1px solid #3d3d5c;

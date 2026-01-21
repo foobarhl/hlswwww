@@ -140,13 +140,44 @@ class HLSWWeb {
             'right-panels'
         );
 
-        // RCON panel splitter
-        this.initVerticalSplitter(
-            'splitter-rcon',
-            'main-content',
-            'rcon-panel',
-            'app-container'
-        );
+        // RCON panel splitter (special - only adjusts rcon height, main-content flexes)
+        this.initRconSplitter();
+    }
+
+    initRconSplitter() {
+        const splitter = document.getElementById('splitter-rcon');
+        const rconPanel = document.getElementById('rcon-panel');
+
+        if (!splitter || !rconPanel) return;
+
+        let startY, startHeight;
+
+        const onMouseMove = (e) => {
+            const dy = startY - e.clientY;
+            const newHeight = Math.max(80, startHeight + dy);
+            rconPanel.style.height = newHeight + 'px';
+            rconPanel.style.flex = 'none';
+        };
+
+        const onMouseUp = () => {
+            splitter.classList.remove('dragging');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            this.saveLayout();
+        };
+
+        splitter.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startY = e.clientY;
+            startHeight = rconPanel.offsetHeight;
+            splitter.classList.add('dragging');
+            document.body.style.cursor = 'row-resize';
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
     }
 
     saveLayout() {
@@ -155,7 +186,6 @@ class HLSWWeb {
             'server-info-panel': document.getElementById('server-info-panel')?.offsetHeight,
             'players-panel': document.getElementById('players-panel')?.offsetHeight,
             'cvars-panel': document.getElementById('cvars-panel')?.offsetHeight,
-            'main-content': document.getElementById('main-content')?.offsetHeight,
             'rcon-panel': document.getElementById('rcon-panel')?.offsetHeight
         };
         localStorage.setItem('hlsw_layout', JSON.stringify(layout));
@@ -174,7 +204,7 @@ class HLSWWeb {
                 if (panel) panel.style.width = layout['server-list-panel'] + 'px';
             }
 
-            // Restore vertical panel heights
+            // Restore vertical panel heights (not main-content, it should flex)
             ['server-info-panel', 'players-panel', 'cvars-panel', 'rcon-panel'].forEach(id => {
                 if (layout[id]) {
                     const panel = document.getElementById(id);
@@ -184,15 +214,6 @@ class HLSWWeb {
                     }
                 }
             });
-
-            // Restore main-content height
-            if (layout['main-content']) {
-                const panel = document.getElementById('main-content');
-                if (panel) {
-                    panel.style.height = layout['main-content'] + 'px';
-                    panel.style.flex = 'none';
-                }
-            }
         } catch (e) {
             // Ignore invalid layout data
         }
@@ -1016,5 +1037,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Register service worker for PWA
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js').catch(() => {});
+
+        // Listen for update notifications from service worker
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data?.type === 'SW_UPDATED') {
+                window.location.reload();
+            }
+        });
     }
 });
