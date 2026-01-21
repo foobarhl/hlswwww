@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#1a1a2e">
 </head>
 <body>
-    <div class="app-container">
+    <div class="app-container" id="app-container">
         <!-- Header -->
         <div class="header">
             <div class="title">HLSW Web</div>
@@ -22,9 +22,9 @@
         </div>
 
         <!-- Main Content Area -->
-        <div class="main-content">
+        <div class="main-content" id="main-content">
             <!-- Left Panel - Server List -->
-            <div class="panel server-list-panel">
+            <div class="panel server-list-panel" id="server-list-panel">
                 <div class="panel-header">
                     <span>Server List</span>
                 </div>
@@ -46,10 +46,13 @@
                 </div>
             </div>
 
+            <!-- Horizontal Splitter -->
+            <div class="splitter splitter-horizontal" id="splitter-main"></div>
+
             <!-- Right Side Panels -->
-            <div class="right-panels">
+            <div class="right-panels" id="right-panels">
                 <!-- Server Info Panel -->
-                <div class="panel server-info-panel">
+                <div class="panel server-info-panel" id="server-info-panel">
                     <div class="panel-header">
                         <span>Server Information</span>
                     </div>
@@ -58,8 +61,11 @@
                     </div>
                 </div>
 
+                <!-- Vertical Splitter -->
+                <div class="splitter splitter-vertical" id="splitter-info"></div>
+
                 <!-- Players Panel -->
-                <div class="panel players-panel">
+                <div class="panel players-panel" id="players-panel">
                     <div class="panel-header">
                         <span>Players</span>
                     </div>
@@ -80,8 +86,11 @@
                     </div>
                 </div>
 
+                <!-- Vertical Splitter -->
+                <div class="splitter splitter-vertical" id="splitter-players"></div>
+
                 <!-- CVars Panel -->
-                <div class="panel cvars-panel">
+                <div class="panel cvars-panel" id="cvars-panel">
                     <div class="panel-header">
                         <span>Server Rules / CVars</span>
                     </div>
@@ -102,8 +111,11 @@
             </div>
         </div>
 
+        <!-- Vertical Splitter for RCON -->
+        <div class="splitter splitter-vertical" id="splitter-rcon"></div>
+
         <!-- Bottom Panel - RCON Console -->
-        <div class="panel rcon-panel">
+        <div class="panel rcon-panel" id="rcon-panel">
             <div class="panel-header">
                 <span>RCON Console</span>
                 <div class="rcon-controls">

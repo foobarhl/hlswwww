@@ -95,8 +95,7 @@ body {
 /* Server List Panel */
 .server-list-panel {
     width: 50%;
-    min-width: 400px;
-    resize: horizontal;
+    min-width: 200px;
     overflow: hidden;
 }
 
@@ -105,22 +104,46 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    min-width: 300px;
+    min-width: 200px;
 }
 
 .server-info-panel {
     height: 180px;
+    min-height: 80px;
 }
 
 .players-panel {
     flex: 1;
-    min-height: 150px;
+    min-height: 80px;
 }
 
 .cvars-panel {
     height: 200px;
-    resize: vertical;
-    overflow: hidden;
+    min-height: 80px;
+}
+
+/* Splitters */
+.splitter {
+    background-color: #3d3d5c;
+    flex-shrink: 0;
+}
+
+.splitter:hover {
+    background-color: #5d5d7d;
+}
+
+.splitter.dragging {
+    background-color: #6b9fff;
+}
+
+.splitter-horizontal {
+    width: 3px;
+    cursor: col-resize;
+}
+
+.splitter-vertical {
+    height: 3px;
+    cursor: row-resize;
 }
 
 /* Tables */
@@ -202,7 +225,7 @@ tbody tr.offline td {
 /* RCON Panel */
 .rcon-panel {
     height: 180px;
-    resize: vertical;
+    min-height: 80px;
     overflow: hidden;
 }
 

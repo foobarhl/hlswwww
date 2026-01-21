@@ -17,6 +17,7 @@ class HLSWWeb {
     init() {
         this.loadServers();
         this.bindEvents();
+        this.initSplitters();
         this.renderServerList();
 
         // Auto-refresh every 30 seconds
@@ -109,6 +110,174 @@ class HLSWWeb {
                 e.preventDefault();
                 this.refreshAllServers();
             }
+        });
+    }
+
+    // Splitter/Resizable Panels
+    initSplitters() {
+        this.restoreLayout();
+
+        // Main horizontal splitter (between server list and right panels)
+        this.initHorizontalSplitter(
+            'splitter-main',
+            'server-list-panel',
+            'right-panels',
+            'main-content'
+        );
+
+        // Vertical splitters in right panels
+        this.initVerticalSplitter(
+            'splitter-info',
+            'server-info-panel',
+            'players-panel',
+            'right-panels'
+        );
+
+        this.initVerticalSplitter(
+            'splitter-players',
+            'players-panel',
+            'cvars-panel',
+            'right-panels'
+        );
+
+        // RCON panel splitter
+        this.initVerticalSplitter(
+            'splitter-rcon',
+            'main-content',
+            'rcon-panel',
+            'app-container'
+        );
+    }
+
+    saveLayout() {
+        const layout = {
+            'server-list-panel': document.getElementById('server-list-panel')?.offsetWidth,
+            'server-info-panel': document.getElementById('server-info-panel')?.offsetHeight,
+            'players-panel': document.getElementById('players-panel')?.offsetHeight,
+            'cvars-panel': document.getElementById('cvars-panel')?.offsetHeight,
+            'main-content': document.getElementById('main-content')?.offsetHeight,
+            'rcon-panel': document.getElementById('rcon-panel')?.offsetHeight
+        };
+        localStorage.setItem('hlsw_layout', JSON.stringify(layout));
+    }
+
+    restoreLayout() {
+        const saved = localStorage.getItem('hlsw_layout');
+        if (!saved) return;
+
+        try {
+            const layout = JSON.parse(saved);
+
+            // Restore server list width
+            if (layout['server-list-panel']) {
+                const panel = document.getElementById('server-list-panel');
+                if (panel) panel.style.width = layout['server-list-panel'] + 'px';
+            }
+
+            // Restore vertical panel heights
+            ['server-info-panel', 'players-panel', 'cvars-panel', 'rcon-panel'].forEach(id => {
+                if (layout[id]) {
+                    const panel = document.getElementById(id);
+                    if (panel) {
+                        panel.style.height = layout[id] + 'px';
+                        panel.style.flex = 'none';
+                    }
+                }
+            });
+
+            // Restore main-content height
+            if (layout['main-content']) {
+                const panel = document.getElementById('main-content');
+                if (panel) {
+                    panel.style.height = layout['main-content'] + 'px';
+                    panel.style.flex = 'none';
+                }
+            }
+        } catch (e) {
+            // Ignore invalid layout data
+        }
+    }
+
+    initHorizontalSplitter(splitterId, leftId, rightId, containerId) {
+        const splitter = document.getElementById(splitterId);
+        const leftPanel = document.getElementById(leftId);
+        const container = document.querySelector(`.${containerId}`) || document.getElementById(containerId);
+
+        if (!splitter || !leftPanel || !container) return;
+
+        let startX, startWidth;
+
+        const onMouseMove = (e) => {
+            const dx = e.clientX - startX;
+            const newWidth = Math.max(200, startWidth + dx);
+            const maxWidth = container.clientWidth - 200 - splitter.offsetWidth;
+            leftPanel.style.width = Math.min(newWidth, maxWidth) + 'px';
+        };
+
+        const onMouseUp = () => {
+            splitter.classList.remove('dragging');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            this.saveLayout();
+        };
+
+        splitter.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startX = e.clientX;
+            startWidth = leftPanel.offsetWidth;
+            splitter.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
+        });
+    }
+
+    initVerticalSplitter(splitterId, topId, bottomId, containerId) {
+        const splitter = document.getElementById(splitterId);
+        const topPanel = document.getElementById(topId);
+        const bottomPanel = document.getElementById(bottomId);
+        const container = document.querySelector(`.${containerId}`) || document.getElementById(containerId);
+
+        if (!splitter || !topPanel || !bottomPanel || !container) return;
+
+        let startY, startTopHeight, startBottomHeight;
+
+        const onMouseMove = (e) => {
+            const dy = e.clientY - startY;
+            const newTopHeight = Math.max(80, startTopHeight + dy);
+            const newBottomHeight = Math.max(80, startBottomHeight - dy);
+
+            // Only apply if both panels meet minimum height
+            if (newTopHeight >= 80 && newBottomHeight >= 80) {
+                topPanel.style.height = newTopHeight + 'px';
+                topPanel.style.flex = 'none';
+                bottomPanel.style.height = newBottomHeight + 'px';
+                bottomPanel.style.flex = 'none';
+            }
+        };
+
+        const onMouseUp = () => {
+            splitter.classList.remove('dragging');
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            this.saveLayout();
+        };
+
+        splitter.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            startY = e.clientY;
+            startTopHeight = topPanel.offsetHeight;
+            startBottomHeight = bottomPanel.offsetHeight;
+            splitter.classList.add('dragging');
+            document.body.style.cursor = 'row-resize';
+            document.body.style.userSelect = 'none';
+            document.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('mouseup', onMouseUp);
         });
     }
 
