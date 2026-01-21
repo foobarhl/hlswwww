@@ -41,7 +41,7 @@ if (!isset($_SESSION['api_key'])) {
                                 <th>Server Name</th>
                                 <th>Map</th>
                                 <th>Players</th>
-                                <th>Ping</th>
+                                <th title="Round-trip time for A2S_INFO query (server to web server, not to your PC)">Ping</th>
                                 <th>Game</th>
                             </tr>
                         </thead>
