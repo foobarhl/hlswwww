@@ -208,7 +208,7 @@ class HLSWWeb {
 
         try {
             // Query all info at once
-            const response = await fetch(`query.php?ip=${server.ip}&port=${server.port}&type=all`);
+            const response = await fetch(`query.php?ip=${server.ip}&port=${server.port}&type=all&_t=${Date.now()}`);
             const data = await response.json();
 
             if (data.success && data.data) {
@@ -462,7 +462,7 @@ class HLSWWeb {
         this.appendRconOutput(`> ${command}`, 'info');
 
         try {
-            const response = await fetch('rcon.php', {
+            const response = await fetch(`rcon.php?_t=${Date.now()}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -684,7 +684,7 @@ class HLSWWeb {
         this.appendRconOutput(`> ${command}`, 'info');
 
         try {
-            const response = await fetch('rcon.php', {
+            const response = await fetch(`rcon.php?_t=${Date.now()}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
