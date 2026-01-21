@@ -22,6 +22,7 @@ class HLSWWeb {
         this.bindEvents();
         this.initSplitters();
         this.renderServerList();
+        this.refreshAllServers();
 
         // Auto-refresh every 30 seconds
         this.refreshInterval = setInterval(() => {
