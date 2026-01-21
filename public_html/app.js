@@ -156,31 +156,34 @@ class HLSWWeb {
 
         let startY, startHeight;
 
-        const onMouseMove = (e) => {
+        const onPointerMove = (e) => {
             const dy = startY - e.clientY;
             const newHeight = Math.max(80, startHeight + dy);
             rconPanel.style.height = newHeight + 'px';
             rconPanel.style.flex = 'none';
         };
 
-        const onMouseUp = () => {
+        const onPointerUp = () => {
             splitter.classList.remove('dragging');
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
+            splitter.releasePointerCapture(splitter.pointerId);
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
             this.saveLayout();
         };
 
-        splitter.addEventListener('mousedown', (e) => {
+        splitter.addEventListener('pointerdown', (e) => {
             e.preventDefault();
+            splitter.pointerId = e.pointerId;
+            splitter.setPointerCapture(e.pointerId);
             startY = e.clientY;
             startHeight = rconPanel.offsetHeight;
             splitter.classList.add('dragging');
             document.body.style.cursor = 'row-resize';
             document.body.style.userSelect = 'none';
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
+            document.addEventListener('pointermove', onPointerMove);
+            document.addEventListener('pointerup', onPointerUp);
         });
     }
 
@@ -232,31 +235,34 @@ class HLSWWeb {
 
         let startX, startWidth;
 
-        const onMouseMove = (e) => {
+        const onPointerMove = (e) => {
             const dx = e.clientX - startX;
             const newWidth = Math.max(200, startWidth + dx);
             const maxWidth = container.clientWidth - 200 - splitter.offsetWidth;
             leftPanel.style.width = Math.min(newWidth, maxWidth) + 'px';
         };
 
-        const onMouseUp = () => {
+        const onPointerUp = () => {
             splitter.classList.remove('dragging');
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
+            splitter.releasePointerCapture(splitter.pointerId);
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
             this.saveLayout();
         };
 
-        splitter.addEventListener('mousedown', (e) => {
+        splitter.addEventListener('pointerdown', (e) => {
             e.preventDefault();
+            splitter.pointerId = e.pointerId;
+            splitter.setPointerCapture(e.pointerId);
             startX = e.clientX;
             startWidth = leftPanel.offsetWidth;
             splitter.classList.add('dragging');
             document.body.style.cursor = 'col-resize';
             document.body.style.userSelect = 'none';
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
+            document.addEventListener('pointermove', onPointerMove);
+            document.addEventListener('pointerup', onPointerUp);
         });
     }
 
@@ -270,7 +276,7 @@ class HLSWWeb {
 
         let startY, startTopHeight, startBottomHeight;
 
-        const onMouseMove = (e) => {
+        const onPointerMove = (e) => {
             const dy = e.clientY - startY;
             const newTopHeight = Math.max(80, startTopHeight + dy);
             const newBottomHeight = Math.max(80, startBottomHeight - dy);
@@ -284,25 +290,28 @@ class HLSWWeb {
             }
         };
 
-        const onMouseUp = () => {
+        const onPointerUp = () => {
             splitter.classList.remove('dragging');
-            document.removeEventListener('mousemove', onMouseMove);
-            document.removeEventListener('mouseup', onMouseUp);
+            splitter.releasePointerCapture(splitter.pointerId);
+            document.removeEventListener('pointermove', onPointerMove);
+            document.removeEventListener('pointerup', onPointerUp);
             document.body.style.cursor = '';
             document.body.style.userSelect = '';
             this.saveLayout();
         };
 
-        splitter.addEventListener('mousedown', (e) => {
+        splitter.addEventListener('pointerdown', (e) => {
             e.preventDefault();
+            splitter.pointerId = e.pointerId;
+            splitter.setPointerCapture(e.pointerId);
             startY = e.clientY;
             startTopHeight = topPanel.offsetHeight;
             startBottomHeight = bottomPanel.offsetHeight;
             splitter.classList.add('dragging');
             document.body.style.cursor = 'row-resize';
             document.body.style.userSelect = 'none';
-            document.addEventListener('mousemove', onMouseMove);
-            document.addEventListener('mouseup', onMouseUp);
+            document.addEventListener('pointermove', onPointerMove);
+            document.addEventListener('pointerup', onPointerUp);
         });
     }
 

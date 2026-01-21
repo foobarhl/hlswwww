@@ -127,6 +127,7 @@ body {
 .splitter {
     background-color: #3d3d5c;
     flex-shrink: 0;
+    touch-action: none;
 }
 
 .splitter:hover {
