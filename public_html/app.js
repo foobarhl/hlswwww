@@ -680,6 +680,8 @@ class HLSWWeb {
         menu.id = 'context-menu';
 
         menu.innerHTML = `
+            <div class="context-menu-item" data-action="connect">Connect</div>
+            <div class="context-menu-separator"></div>
             <div class="context-menu-item" data-action="refresh">Refresh Server</div>
             <div class="context-menu-item" data-action="copy">Copy Address</div>
             <div class="context-menu-separator"></div>
@@ -695,6 +697,9 @@ class HLSWWeb {
                 const action = item.dataset.action;
 
                 switch (action) {
+                    case 'connect':
+                        window.location.href = `steam://connect/${server.ip}:${server.port}`;
+                        break;
                     case 'refresh':
                         this.queryServer(server);
                         break;
