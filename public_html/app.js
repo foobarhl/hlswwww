@@ -392,6 +392,15 @@ class HLSWWeb {
         return /^[\w.-]+$/.test(ip);
     }
 
+    // Handle session expiry
+    handleSessionExpiry(response) {
+        if (response.status === 403) {
+            window.location.reload();
+            return true;
+        }
+        return false;
+    }
+
     // Server Queries
     async queryServer(server) {
         this.setStatus(`Querying ${server.ip}:${server.port}...`);
@@ -399,6 +408,7 @@ class HLSWWeb {
         try {
             // Query all info at once
             const response = await fetch(`query.php?ip=${server.ip}&port=${server.port}&type=all&_t=${Date.now()}&key=${window.HLSW_API_KEY}`);
+            if (this.handleSessionExpiry(response)) return;
             const data = await response.json();
 
             if (data.success && data.data) {
@@ -666,6 +676,7 @@ class HLSWWeb {
                 })
             });
 
+            if (this.handleSessionExpiry(response)) return;
             const data = await response.json();
 
             if (data.success) {
@@ -894,6 +905,7 @@ class HLSWWeb {
                 })
             });
 
+            if (this.handleSessionExpiry(response)) return false;
             const data = await response.json();
 
             if (data.success) {
