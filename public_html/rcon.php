@@ -4,6 +4,7 @@
  * Handles Source RCON protocol via TCP
  */
 
+session_start();
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
@@ -20,11 +21,19 @@ $input = json_decode(file_get_contents('php://input'), true);
 if (!$input) {
     // Try GET parameters as fallback
     $input = [
+        'key' => isset($_GET['key']) ? $_GET['key'] : null,
         'ip' => isset($_GET['ip']) ? $_GET['ip'] : null,
         'port' => isset($_GET['port']) ? $_GET['port'] : null,
         'password' => isset($_GET['password']) ? $_GET['password'] : null,
         'command' => isset($_GET['command']) ? $_GET['command'] : null
     ];
+}
+
+// Check session key
+$key = isset($input['key']) ? $input['key'] : null;
+if (!isset($_SESSION['api_key']) || $key !== $_SESSION['api_key']) {
+    http_response_code(403);
+    die(json_encode(['error' => 'Invalid session']));
 }
 
 if (!isset($input['ip']) || !isset($input['port']) || !isset($input['password']) || !isset($input['command'])) {

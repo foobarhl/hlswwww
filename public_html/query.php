@@ -4,8 +4,15 @@
  * Handles Source/GoldSrc server queries via UDP
  */
 
+session_start();
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
+
+// Check session key
+if (!isset($_SESSION['api_key']) || !isset($_GET['key']) || $_GET['key'] !== $_SESSION['api_key']) {
+    http_response_code(403);
+    die(json_encode(['error' => 'Invalid session']));
+}
 
 // Prevent direct access without parameters
 if (!isset($_GET['ip']) || !isset($_GET['port'])) {

@@ -398,7 +398,7 @@ class HLSWWeb {
 
         try {
             // Query all info at once
-            const response = await fetch(`query.php?ip=${server.ip}&port=${server.port}&type=all&_t=${Date.now()}`);
+            const response = await fetch(`query.php?ip=${server.ip}&port=${server.port}&type=all&_t=${Date.now()}&key=${window.HLSW_API_KEY}`);
             const data = await response.json();
 
             if (data.success && data.data) {
@@ -658,6 +658,7 @@ class HLSWWeb {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    key: window.HLSW_API_KEY,
                     ip: this.selectedServer.ip,
                     port: this.selectedServer.port,
                     password: password,
@@ -885,6 +886,7 @@ class HLSWWeb {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
+                    key: window.HLSW_API_KEY,
                     ip: this.selectedServer.ip,
                     port: this.selectedServer.port,
                     password: password,

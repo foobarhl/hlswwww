@@ -13,8 +13,8 @@ return [
      * This must be reachable from your game servers.
      *
      * Options:
-     *   'auto'           - Auto-detect using public IP discovery service
-     *   '192.168.1.100'  - Manual IP address (use your server's public IP)
+     *   'auto'           - Auto-detect using public IP discovery service - NOT RECOMMENDED!
+     *   '192.168.1.100'  - Manual IP address (use your server's public IP) - RECOMMENDED
      */
     'log_receiver_ip' => 'auto',
 

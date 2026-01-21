@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hlsw-web-v8';
+const CACHE_NAME = 'hlsw-web-v9';
 const STATIC_ASSETS = [
   '/',
   '/index.php',
